@@ -6,8 +6,6 @@ export class UIManager {
 
         this.storageKey = 'mundoThiagoStars';
         this.totalStars = Number(localStorage.getItem(this.storageKey) || 0);
-        this.a11yStorageKey = 'mundoThiagoA11y';
-        this.isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
         this.timerIntervalId = null;
         this.animationFrameId = null;
@@ -71,21 +69,8 @@ export class UIManager {
         this.btnBackMain = document.getElementById('btn-back-main');
         this.confettiLayer = document.getElementById('confetti-layer');
 
-        // Accesibilidad
-        this.a11yToggle = document.getElementById('a11y-toggle');
-        this.a11yPanel = document.getElementById('a11y-panel');
-        this.a11yClose = document.getElementById('a11y-close');
-        this.a11yButtons = Array.from(document.querySelectorAll('.a11y-btn'));
-
-        this.a11yState = {
-            contrast: false,
-            noAnimations: false,
-        };
-
         this.initEventListeners();
         this.syncStarsUI();
-        this.loadA11yPreferences();
-        this.applyA11yState();
         this.createSplashParticles();
     }
 
@@ -243,20 +228,25 @@ export class UIManager {
         }
 
         if (this.btnExitGame) {
-            this.btnExitGame.addEventListener('click', () => {
+            this.btnExitGame.addEventListener('click', (event) => {
                 const shouldExit = window.confirm('Salir de la partida actual?');
                 if (!shouldExit) {
                     return;
                 }
                 this.stopGameLoops();
-                const activeGameScreen = document.querySelector('.screen.game-active');
-                this.navigateBack(activeGameScreen, this.screenMath);
+                const currentScreen = event.currentTarget.closest('.screen') || this.screenGame;
+                this.hideFinalSheet();
+                this.screenGame.classList.remove('game-active');
+                this.screenQuiz.classList.remove('game-active');
+                this.navigateBack(currentScreen, this.screenMath);
             });
         }
 
         if (this.btnExitQuiz) {
             this.btnExitQuiz.addEventListener('click', () => {
                 this.stopGameLoops();
+                this.hideFinalSheet();
+                this.screenQuiz.classList.remove('game-active');
                 this.navigateBack(this.screenQuiz, this.screenMath);
             });
         }
@@ -287,111 +277,7 @@ export class UIManager {
                 this.nextQuizQuestion();
             });
         }
-
-        this.bindA11yControls();
         this.bindAimingControls();
-    }
-
-    bindA11yControls() {
-        if (this.a11yToggle && this.a11yPanel) {
-            this.a11yToggle.addEventListener('click', () => {
-                const isActive = this.a11yPanel.classList.toggle('active');
-                this.a11yPanel.setAttribute('aria-hidden', String(!isActive));
-            });
-        }
-
-        if (this.a11yClose && this.a11yPanel) {
-            this.a11yClose.addEventListener('click', () => {
-                this.a11yPanel.classList.remove('active');
-                this.a11yPanel.setAttribute('aria-hidden', 'true');
-            });
-        }
-
-        if (this.cursorBtn && this.isTouchDevice) {
-            this.cursorBtn.classList.add('disabled');
-            this.cursorBtn.disabled = true;
-        }
-
-        this.a11yButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                if (button.disabled) {
-                    return;
-                }
-                this.handleA11yAction(button.dataset.a11yAction);
-            });
-        });
-    }
-
-    handleA11yAction(action) {
-        switch (action) {
-            case 'contrast':
-                this.a11yState.contrast = !this.a11yState.contrast;
-                break;
-            case 'no-animations':
-                this.a11yState.noAnimations = !this.a11yState.noAnimations;
-                break;
-            case 'reset':
-                this.resetA11yState();
-                break;
-            default:
-                break;
-        }
-
-        this.applyA11yState();
-        this.saveA11yPreferences();
-    }
-
-    resetA11yState() {
-        this.a11yState = {
-            contrast: false,
-            noAnimations: false,
-        };
-    }
-
-    applyA11yState() {
-        const html = document.documentElement;
-        const body = document.body;
-
-        body.classList.toggle('a11y-contrast', this.a11yState.contrast);
-        body.classList.toggle('a11y-no-animations', this.a11yState.noAnimations);
-
-        this.refreshA11yButtonState();
-    }
-
-    refreshA11yButtonState() {
-        this.a11yButtons.forEach((button) => {
-            const action = button.dataset.a11yAction;
-            let isActive = false;
-
-            if (action === 'contrast') {
-                isActive = this.a11yState.contrast;
-            } else if (action === 'no-animations') {
-                isActive = this.a11yState.noAnimations;
-            }
-
-            button.classList.toggle('active', isActive);
-        });
-    }
-
-    saveA11yPreferences() {
-        localStorage.setItem(this.a11yStorageKey, JSON.stringify(this.a11yState));
-    }
-
-    loadA11yPreferences() {
-        const rawState = localStorage.getItem(this.a11yStorageKey);
-        if (!rawState) {
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(rawState);
-            this.a11yState = {
-                contrast: Boolean(parsed.contrast),
-                noAnimations: Boolean(parsed.noAnimations)
-            };
-        } catch (error) {
-            this.resetA11yState();
-        }
     }
 
     bindAimingControls() {
