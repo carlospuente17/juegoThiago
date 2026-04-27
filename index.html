@@ -96,28 +96,63 @@
 
     <!-- PANTALLA 4: JUEGO -->
     <div id="screen-game" class="screen">
-        <div class="game-header-row">
-            <button class="back-btn" id="btn-exit-game" data-back="screen-math"><span class="material-symbols-rounded">arrow_back</span></button>
-            <div class="game-header-info">
-                <h2 id="game-title" class="game-title">Juego</h2>
-                <p id="game-progress" class="game-progress">0/0</p>
+        <div class="shooter-hud">
+            <button class="back-btn" id="btn-exit-game"><span class="material-symbols-rounded">arrow_back</span></button>
+
+            <div class="hud-center">
+                <div id="hud-mode-text" class="hud-mode-text">Pregunta 1 / 5</div>
+                <div class="hud-progress-track">
+                    <div id="hud-progress-fill" class="hud-progress-fill"></div>
+                </div>
             </div>
-            <div class="score-pill">
-                <span class="material-symbols-rounded">workspace_premium</span>
-                <span id="score-value">0</span>
+
+            <div class="score-pill shooter-stars-pill">
+                <span class="material-symbols-rounded">star</span>
+                <span id="hud-stars">0</span>
             </div>
         </div>
 
-        <div class="question-card">
-            <div class="question-icon-wrap">
-                <span id="question-icon" class="material-symbols-rounded">help</span>
+        <div class="math-shooter-layout">
+            <div class="operation-zone">
+                <h2 id="operation-text" class="operation-text">5 + 3 = ?</h2>
             </div>
-            <p id="question-text" class="question-text">Pregunta</p>
+
+            <div id="bubble-zone" class="bubble-zone"></div>
+
+            <div id="player-zone" class="player-zone">
+                <div id="feedback-message" class="feedback-message"></div>
+                <div id="cannon" class="cannon">
+                    <svg viewBox="0 0 140 140" aria-hidden="true">
+                        <circle cx="70" cy="88" r="34" fill="#546E7A"></circle>
+                        <circle cx="70" cy="88" r="20" fill="#90A4AE"></circle>
+                        <rect x="62" y="26" width="16" height="52" rx="8" fill="#37474F"></rect>
+                    </svg>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div id="answers-list" class="answers-list"></div>
+    <div id="final-overlay" class="final-overlay"></div>
+    <div id="final-sheet" class="final-sheet">
+        <div class="sheet-handle"></div>
+        <div class="final-icon-wrap">
+            <span id="final-icon" class="material-symbols-rounded">military_tech</span>
+        </div>
+        <h3 id="final-title" class="final-title">Resultado</h3>
+        <p id="final-score" class="final-score">0 / 0 correctas</p>
+        <p id="final-stars" class="final-stars">Estrellas ganadas: 0</p>
 
-        <button id="btn-next-question" class="btn-next" disabled>Siguiente</button>
+        <div class="final-actions">
+            <button id="btn-replay" class="final-btn final-btn-primary">
+                <span class="material-symbols-rounded">replay</span>
+                Jugar de nuevo
+            </button>
+            <button id="btn-back-main" class="final-btn final-btn-secondary">
+                <span class="material-symbols-rounded">home</span>
+                Menu principal
+            </button>
+        </div>
+        <div id="confetti-layer" class="confetti-layer"></div>
     </div>
 
     <!-- PANTALLA 3 (MODAL): CONFIGURACIÓN -->
