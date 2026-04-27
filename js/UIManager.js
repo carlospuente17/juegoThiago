@@ -1,8 +1,8 @@
 export class UIManager {
-    constructor(gameConfig, sumas, restas) {
+    constructor(gameConfig, gameData = {}) {
         this.config = gameConfig;
-        this.sumas = sumas;
-        this.restas = restas;
+        this.sumas = gameData.sumas;
+        this.restas = gameData.restas;
 
         this.storageKey = 'mundoThiagoStars';
         this.totalStars = Number(localStorage.getItem(this.storageKey) || 0);
@@ -28,13 +28,14 @@ export class UIManager {
         this.modalOverlay = document.getElementById('modal-overlay');
         this.modalConfig = document.getElementById('modal-config');
         this.configTitle = document.getElementById('config-title');
-        this.shooterSpeedGroup = document.getElementById('shooter-speed-group');
+        this.shooterSpeedGroup = document.getElementById('config-speed-section');
         this.rangeGroup = document.getElementById('range-group');
 
         // Botones principales
         this.btnPlay = document.getElementById('btn-play');
         this.btnStart = document.getElementById('btn-start');
         this.btnExitGame = document.getElementById('btn-exit-game');
+        this.btnExitQuiz = document.getElementById('btn-exit-quiz');
         this.btnReplay = document.getElementById('btn-replay');
         this.btnBackMain = document.getElementById('btn-back-main');
 
@@ -52,9 +53,12 @@ export class UIManager {
         this.feedbackMessage = document.getElementById('feedback-message');
 
         // Zona de juego (Quiz)
-        this.quizQuestion = document.getElementById('quiz-question');
-        this.quizOptions = document.getElementById('quiz-options');
-        this.quizFeedback = document.getElementById('quiz-feedback');
+        this.quizTitle = document.getElementById('quiz-title');
+        this.quizProgress = document.getElementById('quiz-progress');
+        this.quizQuestionIcon = document.getElementById('quiz-question-icon');
+        this.quizQuestionText = document.getElementById('quiz-question-text');
+        this.quizAnswersList = document.getElementById('quiz-answers-list');
+        this.btnNextQuiz = document.getElementById('btn-next-quiz');
 
         // Final
         this.finalOverlay = document.getElementById('final-overlay');
@@ -72,7 +76,6 @@ export class UIManager {
         this.a11yPanel = document.getElementById('a11y-panel');
         this.a11yClose = document.getElementById('a11y-close');
         this.a11yButtons = Array.from(document.querySelectorAll('.a11y-btn'));
-        this.cursorBtn = document.getElementById('a11y-cursor-btn');
 
         this.a11yState = {
             font: 'base',
@@ -115,12 +118,12 @@ export class UIManager {
         // Boton Jugar en Splash
         if (this.btnPlay) {
             this.btnPlay.addEventListener('click', () => {
-                this.screenSplash.classList.remove('active');
-                this.screenMain.classList.add('active');
-                // Ocultar la pantalla splash por completo para evitar superposicion
-                setTimeout(() => {
-                    this.screenSplash.style.display = 'none';
-                }, 500);
+                this.navigate(this.screenSplash, this.screenMain);
+                window.setTimeout(() => {
+                    if (this.screenSplash) {
+                        this.screenSplash.hidden = true;
+                    }
+                }, 450);
             });
         }
 
@@ -154,11 +157,19 @@ export class UIManager {
 
                 // Mostrar/ocultar opciones de configuracion segun el juego
                 if (gameType === 'disparar') {
-                    this.shooterSpeedGroup.style.display = 'block';
-                    this.rangeGroup.style.display = 'flex';
+                    if (this.shooterSpeedGroup) {
+                        this.shooterSpeedGroup.style.display = 'block';
+                    }
+                    if (this.rangeGroup) {
+                        this.rangeGroup.style.display = 'flex';
+                    }
                 } else {
-                    this.shooterSpeedGroup.style.display = 'none';
-                    this.rangeGroup.style.display = 'none';
+                    if (this.shooterSpeedGroup) {
+                        this.shooterSpeedGroup.style.display = 'none';
+                    }
+                    if (this.rangeGroup) {
+                        this.rangeGroup.style.display = 'flex';
+                    }
                 }
 
                 this.openModal();
@@ -238,6 +249,13 @@ export class UIManager {
             });
         }
 
+        if (this.btnExitQuiz) {
+            this.btnExitQuiz.addEventListener('click', () => {
+                this.stopGameLoops();
+                this.navigateBack(this.screenQuiz, this.screenMath);
+            });
+        }
+
         if (this.btnReplay) {
             this.btnReplay.addEventListener('click', () => {
                 this.hideFinalSheet();
@@ -253,6 +271,15 @@ export class UIManager {
                 this.screenQuiz.classList.remove('active', 'previous', 'game-active');
                 this.screenMath.classList.remove('active', 'previous');
                 this.screenMain.classList.add('active');
+            });
+        }
+
+        if (this.btnNextQuiz) {
+            this.btnNextQuiz.addEventListener('click', () => {
+                if (!this.session || this.session.finished) {
+                    return;
+                }
+                this.nextQuizQuestion();
             });
         }
 
@@ -292,17 +319,8 @@ export class UIManager {
 
     handleA11yAction(action) {
         switch (action) {
-            case 'font-decrease':
-                this.a11yState.font = 'sm';
-                break;
-            case 'font-increase':
-                this.a11yState.font = 'lg';
-                break;
             case 'contrast':
                 this.a11yState.contrast = !this.a11yState.contrast;
-                break;
-            case 'highlight-links':
-                this.a11yState.highlightLinks = !this.a11yState.highlightLinks;
                 break;
             case 'greyscale-images':
                 this.a11yState.greyscaleImages = !this.a11yState.greyscaleImages;
@@ -364,15 +382,9 @@ export class UIManager {
         const body = document.body;
 
         html.classList.remove('a11y-font-sm', 'a11y-font-lg');
-        if (this.a11yState.font === 'sm') {
-            html.classList.add('a11y-font-sm');
-        }
-        if (this.a11yState.font === 'lg') {
-            html.classList.add('a11y-font-lg');
-        }
 
         body.classList.toggle('a11y-contrast', this.a11yState.contrast);
-        body.classList.toggle('a11y-highlight-links', this.a11yState.highlightLinks);
+        body.classList.remove('a11y-highlight-links');
         body.classList.toggle('a11y-greyscale-images', this.a11yState.greyscaleImages);
         body.classList.toggle('a11y-invert', this.a11yState.invert);
         body.classList.toggle('a11y-no-animations', this.a11yState.noAnimations);
@@ -389,14 +401,8 @@ export class UIManager {
             const action = button.dataset.a11yAction;
             let isActive = false;
 
-            if (action === 'font-decrease') {
-                isActive = this.a11yState.font === 'sm';
-            } else if (action === 'font-increase') {
-                isActive = this.a11yState.font === 'lg';
-            } else if (action === 'contrast') {
+            if (action === 'contrast') {
                 isActive = this.a11yState.contrast;
-            } else if (action === 'highlight-links') {
-                isActive = this.a11yState.highlightLinks;
             } else if (action === 'greyscale-images') {
                 isActive = this.a11yState.greyscaleImages;
             } else if (action === 'invert') {
@@ -578,7 +584,7 @@ export class UIManager {
         let right = b;
         let operator = '+';
 
-        if (this.config.gameMode === 'restas') { // Aunque el juego es 'disparar', puede ser de sumas o restas
+        if (this.config.gameMode === 'restas') {
             operator = '-';
             if (left < right) {
                 const temp = left;
@@ -588,7 +594,6 @@ export class UIManager {
         }
 
         const answer = operator === '+' ? left + right : left - right;
-
         const candidates = [answer - 2, answer - 1, answer + 1, answer + 2, answer - 3, answer + 3]
             .filter((value) => value >= 0 && value !== answer);
 
@@ -635,34 +640,57 @@ export class UIManager {
         }
 
         const provider = this.session.gameMode === 'sumas' ? this.sumas : this.restas;
-        this.session.currentQuestion = provider.getQuestion();
-        this.renderQuizQuestion(this.session.currentQuestion);
+        const questions = provider?.getQuestions?.() || [];
+        const question = questions.length ? questions[Math.floor(Math.random() * questions.length)] : null;
+
+        if (!question) {
+            return;
+        }
+
+        this.session.currentQuestion = question;
+        this.renderQuizQuestion(question);
         this.updateHud();
     }
 
     renderQuizQuestion(question) {
-        this.quizQuestion.innerHTML = `
-            <div class="quiz-op">
-                ${this.renderIcons(question.icon, question.qty1)}
-            </div>
-            <span class="quiz-operator">${question.operator}</span>
-            <div class="quiz-op">
-                ${this.renderIcons(question.icon, question.qty2)}
-            </div>
-        `;
+        const isSumas = this.session?.gameMode === 'sumas';
 
-        this.quizOptions.innerHTML = '';
-        question.options.forEach(option => {
+        if (this.quizTitle) {
+            this.quizTitle.innerText = isSumas ? 'Sumas' : 'Restas';
+        }
+        if (this.quizProgress) {
+            this.quizProgress.innerText = `Pregunta ${this.session.questionSolved + 1} / ${this.session.target}`;
+        }
+        if (this.quizQuestionIcon) {
+            this.quizQuestionIcon.innerText = question.icon || 'calculate';
+        }
+        if (this.quizQuestionText) {
+            this.quizQuestionText.innerHTML = question.qHtml || question.q || 'Pregunta';
+        }
+
+        if (!this.quizAnswersList) {
+            return;
+        }
+
+        this.quizAnswersList.innerHTML = '';
+        question.options.forEach((option, index) => {
             const optionEl = document.createElement('button');
-            optionEl.className = 'quiz-option-btn';
-            optionEl.dataset.value = option;
+            optionEl.className = 'answer-btn visual-option';
+            optionEl.dataset.index = String(index);
+            optionEl.dataset.value = String(option);
             optionEl.innerHTML = `
-                <span class="quiz-option-icon">${question.icon}</span>
-                <span class="quiz-option-text">${option}</span>
+                <span class="material-symbols-rounded math-inline-icon">star</span>
+                <span>${option}</span>
             `;
-            optionEl.addEventListener('click', () => this.handleQuizAnswer(option));
-            this.quizOptions.appendChild(optionEl);
+            optionEl.addEventListener('click', () => this.handleQuizAnswer(index));
+            this.quizAnswersList.appendChild(optionEl);
         });
+
+        if (this.btnNextQuiz) {
+            this.btnNextQuiz.disabled = true;
+            this.btnNextQuiz.innerText = 'Siguiente';
+            this.btnNextQuiz.classList.remove('enabled');
+        }
     }
 
     renderIcons(icon, quantity) {
@@ -673,13 +701,12 @@ export class UIManager {
         return html;
     }
 
-    handleQuizAnswer(selectedValue) {
+    handleQuizAnswer(selectedIndex) {
         if (!this.session || this.session.finished) {
             return;
         }
 
-        const isCorrect = selectedValue === this.session.currentQuestion.answer;
-
+        const isCorrect = selectedIndex === this.session.currentQuestion.correct;
         this.showQuizFeedback(isCorrect);
 
         if (isCorrect) {
@@ -690,30 +717,45 @@ export class UIManager {
             localStorage.setItem(this.storageKey, String(this.totalStars));
             this.syncStarsUI();
 
+            const selectedButton = this.quizAnswersList?.querySelector(`[data-index="${selectedIndex}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('correct');
+            }
+
             setTimeout(() => {
                 this.hideQuizFeedback();
                 this.nextQuizQuestion();
-            }, 1200);
+            }, 900);
         } else {
-            const wrongButton = this.quizOptions.querySelector(`[data-value="${selectedValue}"]`);
+            const wrongButton = this.quizAnswersList?.querySelector(`[data-index="${selectedIndex}"]`);
             if (wrongButton) {
-                wrongButton.classList.add('shake');
-                setTimeout(() => wrongButton.classList.remove('shake'), 400);
+                wrongButton.classList.add('wrong');
+                setTimeout(() => wrongButton.classList.remove('wrong'), 350);
             }
-            setTimeout(() => this.hideQuizFeedback(), 1200);
+            setTimeout(() => this.hideQuizFeedback(), 900);
         }
+
         this.updateHud();
     }
 
     showQuizFeedback(isCorrect) {
-        this.quizFeedback.innerHTML = isCorrect ?
-            '<span class="material-symbols-rounded">star</span> ¡Correcto!' :
-            '<span class="material-symbols-rounded">close</span> Intenta de nuevo';
-        this.quizFeedback.className = `quiz-feedback ${isCorrect ? 'correct' : 'incorrect'} show`;
+        if (!this.btnNextQuiz) {
+            return;
+        }
+
+        this.btnNextQuiz.disabled = false;
+        this.btnNextQuiz.innerText = isCorrect ? '¡Correcto!' : 'Intenta de nuevo';
+        this.btnNextQuiz.classList.toggle('enabled', isCorrect);
     }
 
     hideQuizFeedback() {
-        this.quizFeedback.classList.remove('show');
+        if (!this.btnNextQuiz) {
+            return;
+        }
+
+        this.btnNextQuiz.innerText = 'Siguiente';
+        this.btnNextQuiz.classList.remove('enabled');
+        this.btnNextQuiz.disabled = true;
     }
 
 
@@ -798,6 +840,12 @@ export class UIManager {
         const angleRad = (this.session.angleDeg * Math.PI) / 180;
         const startX = originX + Math.sin(angleRad) * 58;
         const startY = originY - Math.cos(angleRad) * 58;
+        const speedMap = {
+            lenta: 8,
+            normal: 12,
+            rapida: 16
+        };
+        const projectileSpeed = speedMap[this.session.shooterSpeed] || 12;
 
         const projectileEl = document.createElement('div');
         projectileEl.className = 'projectile';
@@ -877,8 +925,12 @@ export class UIManager {
             localStorage.setItem(this.storageKey, String(this.totalStars));
             this.syncStarsUI();
 
+            this.spawnParticles(centerX, centerY);
+            this.showFeedback('CORRECTO', true);
+            this.removeProjectile();
+            this.clearBubbles();
+
             setTimeout(() => {
-                this.hideQuizFeedback();
                 this.nextShooterQuestion();
             }, 450);
         } else {
