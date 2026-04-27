@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#E6E6FA"> <!-- Azul lavanda -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Mundo Thiago - Menú</title>
+    <!-- Fuentes e Iconos (Material Symbols Rounded) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="app">
+    <!-- PANTALLA 1: MENÚ PRINCIPAL -->
+    <div id="screen-main" class="screen active">
+        <div class="header">
+            <div>
+                <h1 class="header-title" style="animation: bounce 2s infinite;">¡Hola, Thiago!</h1>
+                <p class="header-subtitle">¿Qué quieres aprender hoy?</p>
+            </div>
+            <div class="stars-counter">
+                <span class="material-symbols-rounded" style="color: #FFD700; font-size: 24px; font-variation-settings: 'FILL' 1;">star</span> <span id="stars-total">0</span>
+            </div>
+        </div>
+
+        <div class="subjects-grid">
+            <div class="subject-card" style="background: var(--grad-lenguaje);" data-subject="lenguaje">
+                <div class="subject-emoji"><span class="material-symbols-rounded">menu_book</span></div>
+                <div class="subject-title">Lenguaje</div>
+                <div class="subject-desc">Palabras y cuentos</div>
+            </div>
+            
+            <div class="subject-card" style="background: var(--grad-matematica);" data-subject="matematica">
+                <div class="subject-emoji"><span class="material-symbols-rounded">calculate</span></div>
+                <div class="subject-title">Matemática</div>
+                <div class="subject-desc">Números y figuras</div>
+            </div>
+
+            <div class="subject-card" style="background: var(--grad-ciencias);" data-subject="ciencias">
+                <div class="subject-emoji"><span class="material-symbols-rounded">public</span></div>
+                <div class="subject-title">Ciencias</div>
+                <div class="subject-desc">Naturaleza y vida</div>
+            </div>
+
+            <div class="subject-card" style="background: var(--grad-sociales);" data-subject="sociales">
+                <div class="subject-emoji"><span class="material-symbols-rounded">home</span></div>
+                <div class="subject-title">Sociales</div>
+                <div class="subject-desc">Mi familia, Ecuador</div>
+            </div>
+
+            <div class="subject-card" style="background: var(--grad-arte);" data-subject="arte">
+                <div class="subject-emoji"><span class="material-symbols-rounded">palette</span></div>
+                <div class="subject-title">Arte</div>
+                <div class="subject-desc">Colores y formas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: SELECCIÓN DE MATEMÁTICA -->
+    <div id="screen-math" class="screen">
+        <button class="back-btn" data-back="screen-main"><span class="material-symbols-rounded">arrow_back</span></button>
+        
+        <div class="header">
+            <div>
+                <h1 class="header-title" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-rounded" style="font-size: 32px;">calculate</span> Matemática
+                </h1>
+                <p class="header-subtitle">¿Qué quieres practicar?</p>
+            </div>
+        </div>
+
+        <div class="game-list">
+            <div class="game-card" data-game="sumas">
+                <div class="game-icon-bg" style="background: #E8F5E9; color: #4CAF50;"><span class="material-symbols-rounded" style="font-size: 36px; font-weight: bold;">add</span></div>
+                <div class="game-info">
+                    <h3>Sumas</h3>
+                    <p>Practicar sumas</p>
+                </div>
+                <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
+            </div>
+
+            <div class="game-card" data-game="restas">
+                <div class="game-icon-bg" style="background: #FBE9E7; color: #F4511E;"><span class="material-symbols-rounded" style="font-size: 36px; font-weight: bold;">remove</span></div>
+                <div class="game-info">
+                    <h3>Restas</h3>
+                    <p>Practicar restas</p>
+                </div>
+                <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: JUEGO -->
+    <div id="screen-game" class="screen">
+        <div class="game-header-row">
+            <button class="back-btn" id="btn-exit-game" data-back="screen-math"><span class="material-symbols-rounded">arrow_back</span></button>
+            <div class="game-header-info">
+                <h2 id="game-title" class="game-title">Juego</h2>
+                <p id="game-progress" class="game-progress">0/0</p>
+            </div>
+            <div class="score-pill">
+                <span class="material-symbols-rounded">workspace_premium</span>
+                <span id="score-value">0</span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-icon-wrap">
+                <span id="question-icon" class="material-symbols-rounded">help</span>
+            </div>
+            <p id="question-text" class="question-text">Pregunta</p>
+        </div>
+
+        <div id="answers-list" class="answers-list"></div>
+
+        <button id="btn-next-question" class="btn-next" disabled>Siguiente</button>
+    </div>
+
+    <!-- PANTALLA 3 (MODAL): CONFIGURACIÓN -->
+    <div id="modal-overlay" class="modal-overlay"></div>
+    
+    <div id="modal-config" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <h2 class="sheet-title" id="config-title">Configuración</h2>
+            <button class="close-btn" id="btn-close-modal"><span class="material-symbols-rounded">close</span></button>
+        </div>
+
+        <div class="config-section">
+            <h4>¿Cómo quieres jugar?</h4>
+            <div class="toggle-group">
+                <div class="toggle-btn active" data-mode="rondas" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">track_changes</span> Por Rondas
+                </div>
+                <div class="toggle-btn" data-mode="tiempo" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">timer</span> Por Tiempo
+                </div>
+            </div>
+
+            <div class="chips-group active" id="chips-rondas">
+                <button class="chip" data-val="5">5 rondas</button>
+                <button class="chip" data-val="10">10 rondas</button>
+                <button class="chip" data-val="15">15 rondas</button>
+            </div>
+
+            <div class="chips-group" id="chips-tiempo">
+                <button class="chip" data-val="60">1 minuto</button>
+                <button class="chip" data-val="120">2 minutos</button>
+                <button class="chip" data-val="180">3 minutos</button>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h4>Elige el rango de números</h4>
+            <div class="range-list">
+                <div class="range-card" data-range="1-9">
+                    <div class="range-icon"><span class="material-symbols-rounded">eco</span></div>
+                    <div class="range-info">
+                        <div class="range-name">Fácil</div>
+                        <div class="range-desc">Del 1 al 9</div>
+                    </div>
+                    <div class="checkbox-circle"></div>
+                </div>
+
+                <div class="range-card" data-range="10-19">
+                    <div class="range-icon"><span class="material-symbols-rounded">local_florist</span></div>
+                    <div class="range-info">
+                        <div class="range-name">Medio</div>
+                        <div class="range-desc">Del 10 al 19</div>
+                    </div>
+                    <div class="checkbox-circle"></div>
+                </div>
+
+                <div class="range-card" data-range="20-29">
+                    <div class="range-icon"><span class="material-symbols-rounded">park</span></div>
+                    <div class="range-info">
+                        <div class="range-name">Difícil</div>
+                        <div class="range-desc">Del 20 al 29</div>
+                    </div>
+                    <div class="checkbox-circle"></div>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-start" class="btn-start">
+            ¡EMPEZAR! <span class="material-symbols-rounded">rocket_launch</span>
+        </button>
+    </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<!-- LISTO PARA CONECTAR JUEGO -->
+</body>
+</html>
