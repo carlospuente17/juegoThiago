@@ -3,6 +3,7 @@ export class UIManager {
         this.config = gameConfig;
         this.sumas = gameData.sumas;
         this.restas = gameData.restas;
+        this.pintar = gameData.pintar;
 
         this.storageKey = 'mundoThiagoStars';
         this.totalStars = Number(localStorage.getItem(this.storageKey) || 0);
@@ -21,6 +22,7 @@ export class UIManager {
         this.screenMath = document.getElementById('screen-math');
         this.screenGame = document.getElementById('screen-game');
         this.screenQuiz = document.getElementById('screen-quiz');
+        this.screenPaint = document.getElementById('screen-paint');
 
         // Modal configuracion
         this.modalOverlay = document.getElementById('modal-overlay');
@@ -34,6 +36,7 @@ export class UIManager {
         this.btnStart = document.getElementById('btn-start');
         this.btnExitGame = document.getElementById('btn-exit-game');
         this.btnExitQuiz = document.getElementById('btn-exit-quiz');
+        this.btnExitPaint = document.getElementById('btn-exit-paint');
         this.btnReplay = document.getElementById('btn-replay');
         this.btnBackMain = document.getElementById('btn-back-main');
 
@@ -42,6 +45,7 @@ export class UIManager {
         this.hudProgressFill = document.getElementById('hud-progress-fill');
         this.hudStars = document.getElementById('hud-stars');
         this.starsTotal = document.getElementById('stars-total');
+        this.paintStars = document.getElementById('paint-stars');
 
         // Zona de juego (Shooter)
         this.operationText = document.getElementById('operation-text');
@@ -57,6 +61,23 @@ export class UIManager {
         this.quizQuestionText = document.getElementById('quiz-question-text');
         this.quizAnswersList = document.getElementById('quiz-answers-list');
         this.btnNextQuiz = document.getElementById('btn-next-quiz');
+
+        // Zona de juego (Pintar)
+        this.paintOperationText = document.getElementById('paint-operation-text');
+        this.paintProgressText = document.getElementById('paint-progress-text');
+        this.paintProgressFill = document.getElementById('paint-progress-fill');
+        this.paintGrid = document.getElementById('paint-grid');
+        this.paintCounter = document.getElementById('paint-counter');
+        this.paintPalette = document.getElementById('paint-palette');
+        this.btnPaintReady = document.getElementById('btn-paint-ready');
+        this.paintStarsRain = document.getElementById('paint-stars-rain');
+        this.paintFloatingMessage = document.getElementById('paint-floating-message');
+
+        this.selectedPaintColor = '#F44336';
+        this.paintMaxCircles = 10;
+        this.paintedCount = 0;
+        this.paintTouchDragging = false;
+        this.paintTouchAction = null;
 
         // Final
         this.finalOverlay = document.getElementById('final-overlay');
@@ -123,7 +144,7 @@ export class UIManager {
             });
         });
 
-        // Elegir sumas/restas
+        // Elegir juego en Matematica
         document.querySelectorAll('.game-card').forEach((card) => {
             card.addEventListener('click', (e) => {
                 const gameType = e.currentTarget.dataset.game;
@@ -251,6 +272,15 @@ export class UIManager {
             });
         }
 
+        if (this.btnExitPaint) {
+            this.btnExitPaint.addEventListener('click', () => {
+                this.stopGameLoops();
+                this.hideFinalSheet();
+                this.screenPaint.classList.remove('game-active');
+                this.navigateBack(this.screenPaint, this.screenMath);
+            });
+        }
+
         if (this.btnReplay) {
             this.btnReplay.addEventListener('click', () => {
                 this.hideFinalSheet();
@@ -264,6 +294,7 @@ export class UIManager {
                 this.stopGameLoops();
                 this.screenGame.classList.remove('active', 'previous', 'game-active');
                 this.screenQuiz.classList.remove('active', 'previous', 'game-active');
+                this.screenPaint.classList.remove('active', 'previous', 'game-active');
                 this.screenMath.classList.remove('active', 'previous');
                 this.screenMain.classList.add('active');
             });
@@ -278,6 +309,7 @@ export class UIManager {
             });
         }
         this.bindAimingControls();
+        this.bindPaintControls();
     }
 
     bindAimingControls() {
@@ -341,6 +373,8 @@ export class UIManager {
 
         if (this.session.gameMode === 'disparar') {
             this.startShooterGame();
+        } else if (this.session.gameMode === 'pintar') {
+            this.startPaintGame();
         } else {
             this.startQuizGame();
         }
@@ -364,6 +398,289 @@ export class UIManager {
         this.screenQuiz.classList.add('game-active');
         this.navigate(this.screenMath, this.screenQuiz);
         this.nextQuizQuestion();
+    }
+
+    startPaintGame() {
+        this.screenPaint.classList.add('game-active');
+        this.navigate(this.screenMath, this.screenPaint);
+
+        this.paintMaxCircles = this.pintar?.getMaxResult?.(this.session.ranges) || 18;
+        this.buildPaintGrid(this.paintMaxCircles);
+        this.resetPaintSelection();
+        this.nextPaintQuestion();
+    }
+
+    bindPaintControls() {
+        if (this.paintPalette) {
+            this.paintPalette.querySelectorAll('.paint-color').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    this.paintPalette.querySelectorAll('.paint-color').forEach((item) => item.classList.remove('selected'));
+                    event.currentTarget.classList.add('selected');
+                    this.selectedPaintColor = event.currentTarget.dataset.color || '#F44336';
+                    this.refreshPaintGrid();
+                });
+            });
+        }
+
+        if (this.paintGrid) {
+            this.paintGrid.addEventListener('click', (event) => {
+                if (!this.session || this.session.finished || this.session.gameMode !== 'pintar') {
+                    return;
+                }
+                const circle = event.target.closest('.paint-circle');
+                if (!circle) {
+                    return;
+                }
+                const index = Number(circle.dataset.index);
+                this.togglePaintByIndex(index);
+            });
+
+            this.paintGrid.addEventListener('touchstart', (event) => this.handlePaintTouchStart(event), { passive: false });
+            this.paintGrid.addEventListener('touchmove', (event) => this.handlePaintTouchMove(event), { passive: false });
+            this.paintGrid.addEventListener('touchend', () => this.handlePaintTouchEnd());
+            this.paintGrid.addEventListener('touchcancel', () => this.handlePaintTouchEnd());
+        }
+
+        if (this.btnPaintReady) {
+            this.btnPaintReady.addEventListener('click', () => this.submitPaintAnswer());
+        }
+    }
+
+    handlePaintTouchStart(event) {
+        if (!this.session || this.session.finished || this.session.gameMode !== 'pintar') {
+            return;
+        }
+
+        event.preventDefault();
+        this.paintTouchDragging = true;
+        this.paintTouchAction = null;
+
+        const touch = event.touches[0];
+        if (touch) {
+            this.applyPaintTouchAtPoint(touch.clientX, touch.clientY);
+        }
+    }
+
+    handlePaintTouchMove(event) {
+        if (!this.paintTouchDragging || !this.session || this.session.finished || this.session.gameMode !== 'pintar') {
+            return;
+        }
+
+        event.preventDefault();
+        const touch = event.touches[0];
+        if (touch) {
+            this.applyPaintTouchAtPoint(touch.clientX, touch.clientY);
+        }
+    }
+
+    handlePaintTouchEnd() {
+        this.paintTouchDragging = false;
+        this.paintTouchAction = null;
+    }
+
+    applyPaintTouchAtPoint(x, y) {
+        const element = document.elementFromPoint(x, y);
+        const circle = element?.closest?.('.paint-circle');
+        if (!circle || !this.paintGrid?.contains(circle)) {
+            return;
+        }
+
+        const index = Number(circle.dataset.index);
+        if (this.paintTouchAction === null) {
+            this.paintTouchAction = index < this.paintedCount ? 'erase' : 'paint';
+        }
+
+        if (this.paintTouchAction === 'paint') {
+            if (index >= this.paintedCount) {
+                this.paintedCount = Math.min(index + 1, this.paintMaxCircles);
+                this.refreshPaintGrid();
+            }
+        } else if (index < this.paintedCount) {
+            this.paintedCount = index;
+            this.refreshPaintGrid();
+        }
+    }
+
+    buildPaintGrid(totalCircles) {
+        if (!this.paintGrid) {
+            return;
+        }
+
+        this.paintGrid.innerHTML = '';
+
+        for (let index = 0; index < totalCircles; index += 1) {
+            const circle = document.createElement('button');
+            circle.type = 'button';
+            circle.className = 'paint-circle';
+            circle.dataset.index = String(index);
+            this.paintGrid.appendChild(circle);
+        }
+    }
+
+    refreshPaintGrid() {
+        if (!this.paintGrid) {
+            return;
+        }
+
+        const circles = this.paintGrid.querySelectorAll('.paint-circle');
+        circles.forEach((circle, index) => {
+            const shouldPaint = index < this.paintedCount;
+            const wasPainted = circle.classList.contains('painted');
+
+            circle.classList.toggle('painted', shouldPaint);
+            if (shouldPaint) {
+                circle.style.backgroundColor = this.selectedPaintColor;
+                if (!wasPainted) {
+                    circle.classList.remove('pop');
+                    void circle.offsetWidth;
+                    circle.classList.add('pop');
+                }
+            } else {
+                circle.style.backgroundColor = '#FFFFFF';
+            }
+        });
+
+        this.updatePaintCounter();
+    }
+
+    togglePaintByIndex(index) {
+        if (index < this.paintedCount) {
+            this.paintedCount = index;
+        } else {
+            this.paintedCount = Math.min(index + 1, this.paintMaxCircles);
+        }
+        this.refreshPaintGrid();
+    }
+
+    updatePaintCounter() {
+        if (this.paintCounter) {
+            this.paintCounter.innerText = `Has pintado: ${this.paintedCount} circulos`;
+        }
+
+        const expected = this.session?.currentQuestion?.answer;
+        const isReady = Number.isFinite(expected) && this.paintedCount === expected;
+        if (this.btnPaintReady) {
+            this.btnPaintReady.disabled = !isReady;
+            this.btnPaintReady.classList.toggle('enabled', isReady);
+        }
+    }
+
+    resetPaintSelection() {
+        this.paintedCount = 0;
+        this.paintTouchDragging = false;
+        this.paintTouchAction = null;
+        if (this.btnPaintReady) {
+            this.btnPaintReady.disabled = true;
+            this.btnPaintReady.classList.remove('enabled');
+        }
+        this.refreshPaintGrid();
+    }
+
+    nextPaintQuestion() {
+        if (!this.session || this.session.finished) {
+            return;
+        }
+
+        if (this.session.playMode === 'rondas' && this.session.questionSolved >= this.session.target) {
+            this.finishGame();
+            return;
+        }
+
+        this.session.currentQuestion = this.pintar?.generateQuestion?.(this.session.ranges) || {
+            expression: '1 + 1 = ?',
+            answer: 2
+        };
+
+        if (this.paintOperationText) {
+            this.paintOperationText.innerText = this.session.currentQuestion.expression;
+        }
+
+        this.resetPaintSelection();
+        this.updateHud();
+    }
+
+    submitPaintAnswer() {
+        if (!this.session || this.session.finished || this.session.gameMode !== 'pintar') {
+            return;
+        }
+
+        const expected = this.session.currentQuestion?.answer || 0;
+        this.session.totalShots += 1;
+
+        if (this.paintedCount === expected) {
+            this.session.correctShots += 1;
+            this.session.questionSolved += 1;
+            this.session.score += 10;
+            this.session.starsGained += 1;
+            this.totalStars += 1;
+            localStorage.setItem(this.storageKey, String(this.totalStars));
+            this.syncStarsUI();
+
+            this.playPaintSuccessEffects();
+            window.setTimeout(() => {
+                this.nextPaintQuestion();
+            }, 720);
+        } else {
+            this.playPaintErrorEffects();
+        }
+
+        this.updateHud();
+    }
+
+    playPaintSuccessEffects() {
+        const painted = this.paintGrid?.querySelectorAll('.paint-circle.painted') || [];
+        painted.forEach((circle) => {
+            circle.classList.remove('bounce');
+            void circle.offsetWidth;
+            circle.classList.add('bounce');
+        });
+
+        this.launchPaintStarsRain();
+        this.showPaintFloatingMessage('CORRECTO', true);
+    }
+
+    playPaintErrorEffects() {
+        if (this.paintGrid) {
+            this.paintGrid.classList.remove('shake');
+            void this.paintGrid.offsetWidth;
+            this.paintGrid.classList.add('shake');
+        }
+        this.showPaintFloatingMessage('Cuenta de nuevo', false);
+    }
+
+    launchPaintStarsRain() {
+        if (!this.paintStarsRain) {
+            return;
+        }
+
+        this.paintStarsRain.innerHTML = '';
+        for (let i = 0; i < 16; i += 1) {
+            const star = document.createElement('span');
+            star.className = 'paint-star material-symbols-rounded';
+            star.innerText = 'star';
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animationDelay = `${Math.random() * 0.35}s`;
+            this.paintStarsRain.appendChild(star);
+        }
+
+        window.setTimeout(() => {
+            if (this.paintStarsRain) {
+                this.paintStarsRain.innerHTML = '';
+            }
+        }, 1100);
+    }
+
+    showPaintFloatingMessage(text, positive) {
+        if (!this.paintFloatingMessage) {
+            return;
+        }
+
+        this.paintFloatingMessage.innerText = text;
+        this.paintFloatingMessage.classList.toggle('ok', positive);
+        this.paintFloatingMessage.classList.toggle('bad', !positive);
+        this.paintFloatingMessage.classList.remove('show');
+        void this.paintFloatingMessage.offsetWidth;
+        this.paintFloatingMessage.classList.add('show');
     }
 
     startTimerLoop() {
@@ -395,6 +712,10 @@ export class UIManager {
             this.animationFrameId = null;
         }
         this.removeProjectile();
+        this.handlePaintTouchEnd();
+        if (this.paintStarsRain) {
+            this.paintStarsRain.innerHTML = '';
+        }
     }
 
     buildNumberPool() {
@@ -969,6 +1290,9 @@ export class UIManager {
         if (this.hudStars) {
             this.hudStars.innerText = String(this.totalStars);
         }
+        if (this.paintStars) {
+            this.paintStars.innerText = String(this.totalStars);
+        }
         if (this.starsTotal) {
             this.starsTotal.innerText = String(this.totalStars);
         }
@@ -984,7 +1308,8 @@ export class UIManager {
 
         if (this.session.playMode === 'rondas') {
             progress = (this.session.questionSolved / this.session.target) * 100;
-            modeText = `Ronda ${this.session.questionSolved + 1} de ${this.session.target}`;
+            const currentRound = Math.min(this.session.questionSolved + 1, this.session.target);
+            modeText = `Ronda ${currentRound} de ${this.session.target}`;
         } else {
             progress = (this.session.timeLeft / this.session.target) * 100;
             modeText = `Tiempo: ${this.session.timeLeft}s`;
@@ -992,6 +1317,13 @@ export class UIManager {
 
         this.hudProgressFill.style.width = `${progress}%`;
         this.hudModeText.innerText = modeText;
+
+        if (this.paintProgressFill) {
+            this.paintProgressFill.style.width = `${progress}%`;
+        }
+        if (this.paintProgressText) {
+            this.paintProgressText.innerText = modeText;
+        }
     }
 
     shuffle(array) {

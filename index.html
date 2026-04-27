@@ -119,6 +119,15 @@
                 <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
             </div>
 
+            <div class="game-card" data-game="pintar">
+                <div class="game-icon-bg" style="background: linear-gradient(135deg, #BA68C8, #F06292); color: #FFFFFF;"><span class="material-symbols-rounded" style="font-size: 34px; font-weight: bold;">brush</span></div>
+                <div class="game-info">
+                    <h3>PINTAR</h3>
+                    <p>¡Pinta la respuesta!</p>
+                </div>
+                <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
+            </div>
+
             <div class="game-card" data-game="disparar">
                 <div class="game-icon-bg" style="background: #E3F2FD; color: #1E88E5;"><span class="material-symbols-rounded" style="font-size: 34px; font-weight: bold;">ads_click</span></div>
                 <div class="game-info">
@@ -189,6 +198,54 @@
                         <rect x="62" y="26" width="16" height="52" rx="8" fill="#37474F"></rect>
                     </svg>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 5: PINTAR LA RESPUESTA -->
+    <div id="screen-paint" class="screen">
+        <div class="paint-layout">
+            <div class="paint-zone paint-zone-top">
+                <div class="paint-top-header">
+                    <button class="back-btn" id="btn-exit-paint"><span class="material-symbols-rounded">arrow_back</span></button>
+                    <div class="score-pill">
+                        <span class="material-symbols-rounded">star</span>
+                        <span id="paint-stars">0</span>
+                    </div>
+                </div>
+
+                <h2 id="paint-operation-text" class="paint-operation-text">8 + 2 = ?</h2>
+
+                <div class="paint-progress-wrap">
+                    <div id="paint-progress-text" class="paint-progress-text">Ronda 1 de 5</div>
+                    <div class="paint-progress-track">
+                        <div id="paint-progress-fill" class="paint-progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="paint-zone paint-zone-middle">
+                <div id="paint-grid" class="paint-grid"></div>
+                <p id="paint-counter" class="paint-counter">Has pintado: 0 circulos</p>
+                <div id="paint-stars-rain" class="paint-stars-rain"></div>
+                <div id="paint-floating-message" class="paint-floating-message"></div>
+            </div>
+
+            <div class="paint-zone paint-zone-bottom">
+                <p class="paint-color-title">Elige tu color:</p>
+                <div id="paint-palette" class="paint-palette">
+                    <button class="paint-color selected" data-color="#F44336" aria-label="Rojo" style="background: #F44336;"></button>
+                    <button class="paint-color" data-color="#FB8C00" aria-label="Naranja" style="background: #FB8C00;"></button>
+                    <button class="paint-color" data-color="#FDD835" aria-label="Amarillo" style="background: #FDD835;"></button>
+                    <button class="paint-color" data-color="#43A047" aria-label="Verde" style="background: #43A047;"></button>
+                    <button class="paint-color" data-color="#1E88E5" aria-label="Azul" style="background: #1E88E5;"></button>
+                    <button class="paint-color" data-color="#8E24AA" aria-label="Morado" style="background: #8E24AA;"></button>
+                </div>
+
+                <button id="btn-paint-ready" class="btn-paint-ready" disabled>
+                    <span class="material-symbols-rounded">check_circle</span>
+                    Listo
+                </button>
             </div>
         </div>
     </div>

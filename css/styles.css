@@ -39,7 +39,7 @@ body {
     width: 100%;
     max-width: 430px;
     background-color: var(--bg-main);
-    height: 100vh;
+    height: 100dvh;
     position: relative;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -54,7 +54,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 20px);
+    padding: calc(var(--safe-top) + 20px) clamp(12px, 3.8vw, 20px) calc(var(--safe-bottom) + 20px);
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform: translateX(100%);
     display: flex;
@@ -1056,6 +1056,375 @@ body {
 .feedback-message .material-symbols-rounded {
     color: #F9A825;
     font-variation-settings: 'FILL' 1;
+}
+
+/* --- MINIJUEGO PINTAR LA RESPUESTA --- */
+#screen-paint {
+    padding: calc(var(--safe-top) + 8px) 10px calc(var(--safe-bottom) + 10px);
+    overflow: hidden;
+}
+
+.paint-layout {
+    height: 100%;
+    width: 100%;
+    max-width: 940px;
+    margin: 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #FCE4EC 0%, #F3E5F5 35%, #E8EAF6 100%);
+    box-shadow: var(--shadow-card);
+    display: grid;
+    grid-template-rows: 25% 45% 30%;
+}
+
+.paint-zone {
+    position: relative;
+    padding: clamp(10px, 1.6vw, 16px);
+}
+
+.paint-zone-top {
+    background: linear-gradient(140deg, #AB47BC, #EC407A);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.paint-top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.paint-top-header .back-btn {
+    margin-bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+}
+
+.paint-top-header .score-pill {
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+}
+
+.paint-top-header .score-pill .material-symbols-rounded {
+    color: #FFE082;
+    font-variation-settings: 'FILL' 1;
+}
+
+.paint-operation-text {
+    text-align: center;
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.paint-progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.paint-progress-text {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.paint-progress-track {
+    width: 100%;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.paint-progress-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #FFF59D, #FFE082);
+    transition: width 0.25s ease;
+}
+
+.paint-zone-middle {
+    background: linear-gradient(180deg, #F8BBD0, #F3E5F5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.paint-grid {
+    width: 100%;
+    max-width: 760px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 2px;
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    justify-items: center;
+    align-content: start;
+    gap: 8px;
+    touch-action: none;
+}
+
+.paint-grid.shake {
+    animation: paintGridShake 0.32s;
+}
+
+.paint-circle {
+    width: clamp(34px, 6.4vw, 54px);
+    height: clamp(34px, 6.4vw, 54px);
+    border-radius: 50%;
+    border: 3px solid #D4D8E2;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+
+.paint-circle.painted {
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+.paint-circle.pop {
+    animation: paintPop 0.22s ease-out;
+}
+
+.paint-circle.bounce {
+    animation: paintBounce 0.4s ease;
+}
+
+.paint-counter {
+    font-size: 16px;
+    font-weight: 800;
+    color: #5E35B1;
+    padding-bottom: 2px;
+}
+
+.paint-stars-rain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.paint-star {
+    position: absolute;
+    top: -20px;
+    font-size: 24px;
+    color: #FFD54F;
+    font-variation-settings: 'FILL' 1;
+    animation: paintStarRain 0.9s linear forwards;
+}
+
+.paint-floating-message {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    opacity: 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.paint-floating-message.ok {
+    color: #1B5E20;
+}
+
+.paint-floating-message.bad {
+    color: #B71C1C;
+}
+
+.paint-floating-message.show {
+    animation: paintMessage 0.7s ease;
+}
+
+.paint-zone-bottom {
+    background: linear-gradient(180deg, #F3E5F5, #EDE7F6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.paint-color-title {
+    text-align: center;
+    font-size: 15px;
+    color: #6A1B9A;
+    font-weight: 700;
+}
+
+.paint-palette {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.paint-color {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.paint-color.selected {
+    border: 5px solid #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.3), 0 6px 14px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-paint-ready {
+    min-height: 58px;
+    border: none;
+    border-radius: 18px;
+    background: #DADCE5;
+    color: #8E96A6;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-paint-ready.enabled {
+    background: linear-gradient(135deg, #00C853, #64DD17);
+    color: #FFFFFF;
+    box-shadow: 0 10px 20px rgba(0, 200, 83, 0.35);
+    animation: paintReadyPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes paintPop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes paintBounce {
+    0%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+    70% { transform: translateY(-2px); }
+}
+
+@keyframes paintGridShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-6px); }
+}
+
+@keyframes paintStarRain {
+    from {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(220px) rotate(240deg);
+        opacity: 0;
+    }
+}
+
+@keyframes paintMessage {
+    0% {
+        transform: translateX(-50%) translateY(10px);
+        opacity: 0;
+    }
+    20% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    80% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) translateY(-8px);
+        opacity: 0;
+    }
+}
+
+@keyframes paintReadyPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+@media (max-width: 380px) {
+    .paint-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .paint-circle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .paint-operation-text {
+        font-size: 36px;
+    }
+}
+
+@media (min-width: 768px) {
+    #app {
+        max-width: 900px;
+        height: min(96dvh, 940px);
+        border-radius: 24px;
+    }
+
+    .screen {
+        padding: calc(var(--safe-top) + 18px) 24px calc(var(--safe-bottom) + 18px);
+    }
+
+    .subjects-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .subject-card:last-child {
+        grid-column: auto;
+        width: auto;
+        margin: 0;
+    }
+
+    .game-list {
+        max-width: 760px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    #screen-quiz .question-card,
+    #screen-quiz .answers-list,
+    #screen-quiz .btn-next {
+        width: min(100%, 760px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .paint-grid {
+        max-width: 860px;
+        gap: 10px;
+    }
+}
+
+@media (min-width: 1024px) {
+    #app {
+        max-width: 1024px;
+    }
+
+    .paint-operation-text {
+        font-size: clamp(34px, 3.8vw, 58px);
+    }
+
+    .paint-circle {
+        width: clamp(40px, 4.2vw, 56px);
+        height: clamp(40px, 4.2vw, 56px);
+    }
 }
 
 .particle {
