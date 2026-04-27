@@ -1,6 +1,8 @@
 export class UIManager {
-    constructor(gameConfig) {
+    constructor(gameConfig, sumas, restas) {
         this.config = gameConfig;
+        this.sumas = sumas;
+        this.restas = restas;
 
         this.storageKey = 'mundoThiagoStars';
         this.totalStars = Number(localStorage.getItem(this.storageKey) || 0);
@@ -19,15 +21,20 @@ export class UIManager {
         this.screenMain = document.getElementById('screen-main');
         this.screenMath = document.getElementById('screen-math');
         this.screenGame = document.getElementById('screen-game');
+        this.screenQuiz = document.getElementById('screen-quiz');
 
         // Modal configuracion
         this.modalOverlay = document.getElementById('modal-overlay');
         this.modalConfig = document.getElementById('modal-config');
         this.configTitle = document.getElementById('config-title');
+        this.shooterSpeedGroup = document.getElementById('shooter-speed-group');
+        this.rangeGroup = document.getElementById('range-group');
 
         // Botones principales
         this.btnStart = document.getElementById('btn-start');
         this.btnExitGame = document.getElementById('btn-exit-game');
+        this.btnReplay = document.getElementById('btn-replay');
+        this.btnBackMain = document.getElementById('btn-back-main');
 
         // HUD juego
         this.hudModeText = document.getElementById('hud-mode-text');
@@ -35,12 +42,17 @@ export class UIManager {
         this.hudStars = document.getElementById('hud-stars');
         this.starsTotal = document.getElementById('stars-total');
 
-        // Zona de juego
+        // Zona de juego (Shooter)
         this.operationText = document.getElementById('operation-text');
         this.bubbleZone = document.getElementById('bubble-zone');
         this.playerZone = document.getElementById('player-zone');
         this.cannon = document.getElementById('cannon');
         this.feedbackMessage = document.getElementById('feedback-message');
+
+        // Zona de juego (Quiz)
+        this.quizQuestion = document.getElementById('quiz-question');
+        this.quizOptions = document.getElementById('quiz-options');
+        this.quizFeedback = document.getElementById('quiz-feedback');
 
         // Final
         this.finalOverlay = document.getElementById('final-overlay');
@@ -107,6 +119,16 @@ export class UIManager {
                 this.configTitle.innerText = `Configurar ${gameType.charAt(0).toUpperCase()}${gameType.slice(1)}`;
                 this.config.resetConfig();
                 this.resetModalUI();
+
+                // Mostrar/ocultar opciones de configuracion segun el juego
+                if (gameType === 'disparar') {
+                    this.shooterSpeedGroup.style.display = 'block';
+                    this.rangeGroup.style.display = 'flex';
+                } else {
+                    this.shooterSpeedGroup.style.display = 'none';
+                    this.rangeGroup.style.display = 'none';
+                }
+
                 this.openModal();
             });
         });
@@ -151,11 +173,13 @@ export class UIManager {
             });
         });
 
-        // Rangos multiples
-        document.querySelectorAll('.range-card').forEach((card) => {
-            card.addEventListener('click', (e) => {
-                e.currentTarget.classList.toggle('active');
-                this.config.ranges = Array.from(document.querySelectorAll('.range-card.active')).map((item) => item.dataset.range);
+        // Velocidad del shooter
+        document.querySelectorAll('.speed-chip').forEach((chip) => {
+            chip.addEventListener('click', (e) => {
+                const parent = e.currentTarget.parentElement;
+                parent.querySelectorAll('.speed-chip').forEach((c) => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                this.config.shooterSpeed = e.currentTarget.dataset.speed;
                 this.checkStartButton();
             });
         });
@@ -177,7 +201,8 @@ export class UIManager {
                     return;
                 }
                 this.stopGameLoops();
-                this.navigateBack(this.screenGame, this.screenMath);
+                const activeGameScreen = document.querySelector('.screen.game-active');
+                this.navigateBack(activeGameScreen, this.screenMath);
             });
         }
 
@@ -192,7 +217,8 @@ export class UIManager {
             this.btnBackMain.addEventListener('click', () => {
                 this.hideFinalSheet();
                 this.stopGameLoops();
-                this.screenGame.classList.remove('active', 'previous');
+                this.screenGame.classList.remove('active', 'previous', 'game-active');
+                this.screenQuiz.classList.remove('active', 'previous', 'game-active');
                 this.screenMath.classList.remove('active', 'previous');
                 this.screenMain.classList.add('active');
             });
@@ -418,14 +444,14 @@ export class UIManager {
     startGame() {
         this.stopGameLoops();
         this.hideFinalSheet();
-        this.clearBubbles();
 
         const totalTarget = Number(this.config.amount || 0);
         this.session = {
-            gameMode: this.config.juego,
+            gameMode: this.config.gameMode,
             playMode: this.config.playMode,
             target: totalTarget,
-            ranges: [...this.config.rangos],
+            ranges: [...this.config.ranges],
+            shooterSpeed: this.config.shooterSpeed,
             questionSolved: 0,
             score: 0,
             totalShots: 0,
@@ -439,15 +465,31 @@ export class UIManager {
             finished: false
         };
 
-        this.updateCannonVisual();
-        this.navigate(this.screenMath, this.screenGame);
-        this.nextQuestion();
+        if (this.session.gameMode === 'disparar') {
+            this.startShooterGame();
+        } else {
+            this.startQuizGame();
+        }
 
         if (this.session.playMode === 'tiempo') {
             this.startTimerLoop();
         }
 
         this.syncStarsUI();
+    }
+
+    startShooterGame() {
+        this.clearBubbles();
+        this.updateCannonVisual();
+        this.screenGame.classList.add('game-active');
+        this.navigate(this.screenMath, this.screenGame);
+        this.nextShooterQuestion();
+    }
+
+    startQuizGame() {
+        this.screenQuiz.classList.add('game-active');
+        this.navigate(this.screenMath, this.screenQuiz);
+        this.nextQuizQuestion();
     }
 
     startTimerLoop() {
@@ -482,7 +524,7 @@ export class UIManager {
     }
 
     buildNumberPool() {
-        const ranges = this.config.rangos;
+        const ranges = this.config.ranges;
         const pool = [];
 
         ranges.forEach((range) => {
@@ -495,7 +537,7 @@ export class UIManager {
         return pool.length ? pool : [1, 2, 3, 4, 5, 6, 7, 8, 9];
     }
 
-    generateQuestion() {
+    generateShooterQuestion() {
         const pool = this.buildNumberPool();
         const a = pool[Math.floor(Math.random() * pool.length)];
         const b = pool[Math.floor(Math.random() * pool.length)];
@@ -504,7 +546,7 @@ export class UIManager {
         let right = b;
         let operator = '+';
 
-        if (this.config.juego === 'restas') {
+        if (this.config.gameMode === 'restas') { // Aunque el juego es 'disparar', puede ser de sumas o restas
             operator = '-';
             if (left < right) {
                 const temp = left;
@@ -533,7 +575,7 @@ export class UIManager {
         };
     }
 
-    nextQuestion() {
+    nextShooterQuestion() {
         if (!this.session || this.session.finished) {
             return;
         }
@@ -543,12 +585,105 @@ export class UIManager {
             return;
         }
 
-        this.session.currentQuestion = this.generateQuestion();
+        this.session.currentQuestion = this.generateShooterQuestion();
         this.operationText.innerText = this.session.currentQuestion.expression;
 
         this.createAnswerBubbles(this.session.currentQuestion.options, this.session.currentQuestion.answer);
         this.updateHud();
     }
+
+    nextQuizQuestion() {
+        if (!this.session || this.session.finished) {
+            return;
+        }
+
+        if (this.session.playMode === 'rondas' && this.session.questionSolved >= this.session.target) {
+            this.finishGame();
+            return;
+        }
+
+        const provider = this.session.gameMode === 'sumas' ? this.sumas : this.restas;
+        this.session.currentQuestion = provider.getQuestion();
+        this.renderQuizQuestion(this.session.currentQuestion);
+        this.updateHud();
+    }
+
+    renderQuizQuestion(question) {
+        this.quizQuestion.innerHTML = `
+            <div class="quiz-op">
+                ${this.renderIcons(question.icon, question.qty1)}
+            </div>
+            <span class="quiz-operator">${question.operator}</span>
+            <div class="quiz-op">
+                ${this.renderIcons(question.icon, question.qty2)}
+            </div>
+        `;
+
+        this.quizOptions.innerHTML = '';
+        question.options.forEach(option => {
+            const optionEl = document.createElement('button');
+            optionEl.className = 'quiz-option-btn';
+            optionEl.dataset.value = option;
+            optionEl.innerHTML = `
+                <span class="quiz-option-icon">${question.icon}</span>
+                <span class="quiz-option-text">${option}</span>
+            `;
+            optionEl.addEventListener('click', () => this.handleQuizAnswer(option));
+            this.quizOptions.appendChild(optionEl);
+        });
+    }
+
+    renderIcons(icon, quantity) {
+        let html = '';
+        for (let i = 0; i < quantity; i++) {
+            html += `<span class="quiz-item-icon">${icon}</span>`;
+        }
+        return html;
+    }
+
+    handleQuizAnswer(selectedValue) {
+        if (!this.session || this.session.finished) {
+            return;
+        }
+
+        const isCorrect = selectedValue === this.session.currentQuestion.answer;
+
+        this.showQuizFeedback(isCorrect);
+
+        if (isCorrect) {
+            this.session.questionSolved += 1;
+            this.session.score += 10;
+            this.session.starsGained += 1;
+            this.totalStars += 1;
+            localStorage.setItem(this.storageKey, String(this.totalStars));
+            this.syncStarsUI();
+
+            setTimeout(() => {
+                this.hideQuizFeedback();
+                this.nextQuizQuestion();
+            }, 1200);
+        } else {
+            const wrongButton = this.quizOptions.querySelector(`[data-value="${selectedValue}"]`);
+            if (wrongButton) {
+                wrongButton.classList.add('shake');
+                setTimeout(() => wrongButton.classList.remove('shake'), 400);
+            }
+            setTimeout(() => this.hideQuizFeedback(), 1200);
+        }
+        this.updateHud();
+    }
+
+    showQuizFeedback(isCorrect) {
+        this.quizFeedback.innerHTML = isCorrect ?
+            '<span class="material-symbols-rounded">star</span> ¡Correcto!' :
+            '<span class="material-symbols-rounded">close</span> Intenta de nuevo';
+        this.quizFeedback.className = `quiz-feedback ${isCorrect ? 'correct' : 'incorrect'} show`;
+    }
+
+    hideQuizFeedback() {
+        this.quizFeedback.classList.remove('show');
+    }
+
 
     createAnswerBubbles(options, correctAnswer) {
         this.clearBubbles();
@@ -557,6 +692,14 @@ export class UIManager {
         const zoneWidth = this.bubbleZone.clientWidth;
         const bubbleSize = 80;
         const positions = [];
+
+        const speedMap = {
+            lenta: 1.8,
+            normal: 1,
+            rapida: 0.6
+        };
+        const speedMultiplier = speedMap[this.session.shooterSpeed] || 1;
+
 
         options.forEach((option, index) => {
             const bubble = document.createElement('div');
@@ -576,7 +719,7 @@ export class UIManager {
             bubble.style.left = `${x}px`;
             bubble.style.top = `${12 + index * 2}px`;
             bubble.style.background = palette[index % palette.length];
-            bubble.style.animationDuration = `${(3 + Math.random() * 2).toFixed(2)}s`;
+            bubble.style.animationDuration = `${(3 + Math.random() * 2) * speedMultiplier}s`;
             bubble.style.animationDelay = `${(-Math.random() * 2).toFixed(2)}s`;
 
             this.bubbleZone.appendChild(bubble);
@@ -632,8 +775,8 @@ export class UIManager {
             element: projectileEl,
             x: startX,
             y: startY,
-            vx: Math.sin(angleRad) * 12,
-            vy: -Math.cos(angleRad) * 12,
+            vx: Math.sin(angleRad) * projectileSpeed,
+            vy: -Math.cos(angleRad) * projectileSpeed,
             layoutRect
         };
 
@@ -702,13 +845,10 @@ export class UIManager {
             localStorage.setItem(this.storageKey, String(this.totalStars));
             this.syncStarsUI();
 
-            this.spawnParticles(centerX, centerY);
-            this.showFeedback('CORRECTO', true);
-            this.removeProjectile();
-            this.clearBubbles();
-
-            this.session.questionSolved += 1;
-            window.setTimeout(() => this.nextQuestion(), 450);
+            setTimeout(() => {
+                this.hideQuizFeedback();
+                this.nextShooterQuestion();
+            }, 450);
         } else {
             bubble.classList.add('shake');
             window.setTimeout(() => bubble.classList.remove('shake'), 300);
@@ -798,13 +938,15 @@ export class UIManager {
 
         this.finalIcon.innerText = icon;
         this.finalTitle.innerText = title;
-        this.finalScore.innerText = `${this.session.correctShots} / ${this.session.totalShots} correctas`;
-        this.finalStars.innerText = `Estrellas ganadas: ${this.session.starsGained}`;
+        this.finalScore.innerText = `${this.session.score} Puntos`;
+        this.finalStars.innerHTML = `<span class="material-symbols-rounded">star</span> ${this.session.starsGained} Estrellas ganadas`;
 
         this.finalOverlay.classList.add('active');
         this.finalSheet.classList.add('active');
 
-        this.launchConfetti();
+        if (percent > 70) {
+            this.triggerConfetti();
+        }
     }
 
     hideFinalSheet() {
@@ -813,17 +955,74 @@ export class UIManager {
         this.confettiLayer.innerHTML = '';
     }
 
-    launchConfetti() {
-        this.confettiLayer.innerHTML = '';
-        const colors = ['#EF5350', '#66BB6A', '#29B6F6', '#FFCA28', '#AB47BC', '#FF7043'];
+    triggerConfetti() {
+        const colors = ['#FF7043', '#66BB6A', '#42A5F5', '#FFCA28', '#AB47BC'];
+        for (let i = 0; i < 100; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            confetti.style.left = `${Math.random() * 100}%`;
+            confetti.style.background = colors[i % colors.length];
+            confetti.style.animationDelay = `${Math.random() * 2}s`;
+            confetti.style.animationDuration = `${2 + Math.random() * 3}s`;
+            this.confettiLayer.appendChild(confetti);
+        }
+    }
 
-        for (let i = 0; i < 20; i += 1) {
-            const piece = document.createElement('div');
-            piece.className = 'confetti-piece';
-            piece.style.left = `${Math.random() * 100}%`;
-            piece.style.background = colors[i % colors.length];
-            piece.style.animationDelay = `${(Math.random() * 0.6).toFixed(2)}s`;
-            this.confettiLayer.appendChild(piece);
+    // --- Utilidades UI ---
+
+    checkStartButton() {
+        if (this.btnStart) {
+            this.btnStart.disabled = !this.config.isComplete();
+        }
+    }
+
+    resetModalUI() {
+        document.querySelectorAll('.toggle-btn, .chip, .range-card, .speed-chip').forEach((el) => {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.chips-group').forEach((group) => {
+            group.classList.remove('active');
+        });
+        this.checkStartButton();
+    }
+
+    openModal() {
+        this.modalOverlay.classList.add('active');
+        this.modalConfig.classList.add('active');
+    }
+
+    closeModal() {
+        this.modalOverlay.classList.remove('active');
+        this.modalConfig.classList.remove('active');
+    }
+
+    navigate(from, to) {
+        if (from) {
+            from.classList.remove('active');
+            from.classList.add('previous');
+        }
+        if (to) {
+            to.classList.add('active');
+            to.classList.remove('previous');
+        }
+    }
+
+    navigateBack(from, to) {
+        if (from) {
+            from.classList.remove('active', 'previous');
+        }
+        if (to) {
+            to.classList.add('active');
+            to.classList.remove('previous');
+        }
+    }
+
+    syncStarsUI() {
+        if (this.hudStars) {
+            this.hudStars.innerText = String(this.totalStars);
+        }
+        if (this.starsTotal) {
+            this.starsTotal.innerText = String(this.totalStars);
         }
     }
 
@@ -832,97 +1031,26 @@ export class UIManager {
             return;
         }
 
+        let progress = 0;
+        let modeText = '';
+
         if (this.session.playMode === 'rondas') {
-            const current = Math.min(this.session.questionSolved + 1, this.session.target);
-            this.hudModeText.innerText = `Pregunta ${current} / ${this.session.target}`;
-
-            const progress = (this.session.questionSolved / Math.max(this.session.target, 1)) * 100;
-            this.hudProgressFill.style.width = `${progress}%`;
-            this.hudProgressFill.classList.remove('danger');
+            progress = (this.session.questionSolved / this.session.target) * 100;
+            modeText = `Ronda ${this.session.questionSolved + 1} de ${this.session.target}`;
         } else {
-            this.hudModeText.innerText = `Tiempo ${this.session.timeLeft}s`;
-
-            const remaining = (this.session.timeLeft / Math.max(this.session.target, 1)) * 100;
-            this.hudProgressFill.style.width = `${remaining}%`;
-
-            if (this.session.timeLeft <= 10) {
-                this.hudProgressFill.classList.add('danger');
-            } else {
-                this.hudProgressFill.classList.remove('danger');
-            }
+            progress = (this.session.timeLeft / this.session.target) * 100;
+            modeText = `Tiempo: ${this.session.timeLeft}s`;
         }
 
-        this.hudStars.innerText = String(this.totalStars);
+        this.hudProgressFill.style.width = `${progress}%`;
+        this.hudModeText.innerText = modeText;
     }
 
-    syncStarsUI() {
-        if (this.starsTotal) {
-            this.starsTotal.innerText = String(this.totalStars);
-        }
-        if (this.hudStars) {
-            this.hudStars.innerText = String(this.totalStars);
-        }
-    }
-
-    navigate(fromScreen, toScreen) {
-        if (!fromScreen || !toScreen) return;
-        fromScreen.classList.remove('active');
-        fromScreen.classList.add('previous');
-        toScreen.classList.add('active');
-        toScreen.classList.remove('previous');
-    }
-
-    navigateBack(fromScreen, toScreen) {
-        if (!fromScreen || !toScreen) return;
-        fromScreen.classList.remove('active');
-        toScreen.classList.add('active');
-        toScreen.classList.remove('previous');
-    }
-
-    openModal() {
-        if (this.modalOverlay) this.modalOverlay.classList.add('active');
-        if (this.modalConfig) this.modalConfig.classList.add('active');
-    }
-
-    closeModal() {
-        if (this.modalOverlay) this.modalOverlay.classList.remove('active');
-        if (this.modalConfig) this.modalConfig.classList.remove('active');
-    }
-
-    resetModalUI() {
-        document.querySelectorAll('.toggle-btn').forEach((btn) => btn.classList.remove('active'));
-        const rondasToggle = document.querySelector('.toggle-btn[data-mode="rondas"]');
-        if (rondasToggle) {
-            rondasToggle.classList.add('active');
-        }
-
-        document.querySelectorAll('.chips-group').forEach((group) => group.classList.remove('active'));
-        const chipsRondas = document.getElementById('chips-rondas');
-        if (chipsRondas) {
-            chipsRondas.classList.add('active');
-        }
-
-        document.querySelectorAll('.chip, .range-card').forEach((element) => element.classList.remove('active'));
-        this.checkStartButton();
-    }
-
-    checkStartButton() {
-        if (!this.btnStart) {
-            return;
-        }
-
-        if (this.config.isComplete()) {
-            this.btnStart.classList.add('enabled');
-        } else {
-            this.btnStart.classList.remove('enabled');
-        }
-    }
-
-    shuffle(items) {
-        for (let i = items.length - 1; i > 0; i -= 1) {
+    shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [items[i], items[j]] = [items[j], items[i]];
+            [array[i], array[j]] = [array[j], array[i]];
         }
-        return items;
+        return array;
     }
 }

@@ -5,6 +5,7 @@ export class GameConfig {
         this.playMode = 'rondas'; // 'rondas' o 'tiempo'
         this.amount = null; // 5, 10, 15 (rondas) o 60, 120, 180 (tiempo)
         this.ranges = []; // ['1-9', '10-19', '20-29']
+        this.shooterSpeed = 'normal'; // lenta, normal, rapida
     }
 
     get juego() {
@@ -23,6 +24,7 @@ export class GameConfig {
         this.playMode = 'rondas';
         this.amount = null;
         this.ranges = [];
+        this.shooterSpeed = 'normal';
     }
 
     toJSON() {
@@ -31,7 +33,8 @@ export class GameConfig {
             Juego: this.juego,
             Modo: this.playMode,
             Cantidad: this.amount,
-            Rangos: this.rangos
+            Rangos: this.rangos,
+            VelocidadDisparo: this.shooterSpeed
         }, null, 2);
     }
 }

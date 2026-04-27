@@ -106,7 +106,41 @@
                 </div>
                 <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
             </div>
+
+            <div class="game-card" data-game="disparar">
+                <div class="game-icon-bg" style="background: #E3F2FD; color: #1E88E5;"><span class="material-symbols-rounded" style="font-size: 34px; font-weight: bold;">ads_click</span></div>
+                <div class="game-info">
+                    <h3>Disparar</h3>
+                    <p>Apunta y revienta la respuesta</p>
+                </div>
+                <div class="game-arrow"><span class="material-symbols-rounded">arrow_forward</span></div>
+            </div>
         </div>
+    </div>
+
+    <!-- PANTALLA 3A: QUIZ SUMAS/RESTAS -->
+    <div id="screen-quiz" class="screen">
+        <div class="game-header-row">
+            <button class="back-btn" id="btn-exit-quiz"><span class="material-symbols-rounded">arrow_back</span></button>
+            <div class="game-header-info">
+                <h2 id="quiz-title" class="game-title">Juego</h2>
+                <p id="quiz-progress" class="game-progress">0/0</p>
+            </div>
+            <div class="score-pill">
+                <span class="material-symbols-rounded">star</span>
+                <span id="quiz-stars">0</span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-icon-wrap">
+                <span id="quiz-question-icon" class="material-symbols-rounded">calculate</span>
+            </div>
+            <p id="quiz-question-text" class="question-text">Pregunta</p>
+        </div>
+
+        <div id="quiz-answers-list" class="answers-list"></div>
+        <button id="btn-next-quiz" class="btn-next" disabled>Siguiente</button>
     </div>
 
     <!-- PANTALLA 4: JUEGO -->
@@ -204,6 +238,15 @@
             </div>
         </div>
 
+        <div id="config-speed-section" class="config-section" style="display: none;">
+            <h4>Velocidad del juego Disparar</h4>
+            <div class="chips-group active" id="chips-speed">
+                <button class="chip speed-chip" data-speed="lenta">Lenta</button>
+                <button class="chip speed-chip active" data-speed="normal">Normal</button>
+                <button class="chip speed-chip" data-speed="rapida">Rapida</button>
+            </div>
+        </div>
+
         <div class="config-section">
             <h4>Elige el rango de números</h4>
             <div class="range-list">
@@ -247,7 +290,7 @@
 
     <div id="a11y-panel" class="a11y-panel" aria-hidden="true">
         <div class="a11y-header">
-            <h3>VEKRAK</h3>
+            <h3>Accesibilidad</h3>
             <button id="a11y-close" class="a11y-close" aria-label="Cerrar accesibilidad">
                 <span class="material-symbols-rounded">close</span>
             </button>
@@ -262,7 +305,6 @@
             <button class="a11y-btn" data-a11y-action="invert">INVERTIR</button>
             <button class="a11y-btn" data-a11y-action="no-animations">SIN ANIMACIONES</button>
             <button class="a11y-btn" data-a11y-action="remove-styles">REMOVER ESTILOS</button>
-            <button id="a11y-cursor-btn" class="a11y-btn" data-a11y-action="cursor-large">CURSOR AMPLIADO</button>
             <button class="a11y-btn" data-a11y-action="monochrome">MONOCROMÁTICO</button>
             <button class="a11y-btn" data-a11y-action="sepia">SEPIA</button>
         </div>
