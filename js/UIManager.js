@@ -212,6 +212,15 @@ export class UIManager {
             });
         });
 
+        // Rangos de números
+        document.querySelectorAll('.range-card').forEach((card) => {
+            card.addEventListener('click', (e) => {
+                e.currentTarget.classList.toggle('active');
+                this.config.ranges = Array.from(document.querySelectorAll('.range-card.active')).map((item) => item.dataset.range);
+                this.checkStartButton();
+            });
+        });
+
         // Velocidad del shooter
         document.querySelectorAll('#chips-speed .speed-chip').forEach((chip) => {
             chip.addEventListener('click', (e) => {
