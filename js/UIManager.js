@@ -206,7 +206,7 @@ export class UIManager {
         });
 
         // Cantidad rondas/tiempo
-        document.querySelectorAll('.chip').forEach((chip) => {
+        document.querySelectorAll('#chips-rondas .chip, #chips-tiempo .chip').forEach((chip) => {
             chip.addEventListener('click', (e) => {
                 const parent = e.currentTarget.parentElement;
                 parent.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
@@ -217,7 +217,7 @@ export class UIManager {
         });
 
         // Velocidad del shooter
-        document.querySelectorAll('.speed-chip').forEach((chip) => {
+        document.querySelectorAll('#chips-speed .speed-chip').forEach((chip) => {
             chip.addEventListener('click', (e) => {
                 const parent = e.currentTarget.parentElement;
                 parent.querySelectorAll('.speed-chip').forEach((c) => c.classList.remove('active'));
@@ -1065,9 +1065,25 @@ export class UIManager {
         document.querySelectorAll('.toggle-btn, .chip, .range-card, .speed-chip').forEach((el) => {
             el.classList.remove('active');
         });
+        const defaultMode = document.querySelector('.toggle-btn[data-mode="rondas"]');
+        const defaultRounds = document.querySelector('#chips-rondas .chip[data-val="5"]');
+        const defaultSpeed = document.querySelector('#chips-speed .speed-chip[data-speed="normal"]');
+        if (defaultMode) {
+            defaultMode.classList.add('active');
+        }
+        if (defaultRounds) {
+            defaultRounds.classList.add('active');
+        }
+        if (defaultSpeed) {
+            defaultSpeed.classList.add('active');
+        }
         document.querySelectorAll('.chips-group').forEach((group) => {
             group.classList.remove('active');
         });
+        const roundsGroup = document.getElementById('chips-rondas');
+        if (roundsGroup) {
+            roundsGroup.classList.add('active');
+        }
         this.checkStartButton();
     }
 
