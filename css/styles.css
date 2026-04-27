@@ -1351,7 +1351,6 @@ body.a11y-no-animations *::after {
     transition: none !important;
     scroll-behavior: auto !important;
 }
-body.a11y-remove-styles { all: initial; }
 body.a11y-monochrome { filter: grayscale(100%) contrast(1.2); }
 body.a11y-sepia { filter: sepia(100%); }
 

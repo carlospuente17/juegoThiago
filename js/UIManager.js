@@ -159,16 +159,20 @@ export class UIManager {
                 if (gameType === 'disparar') {
                     if (this.shooterSpeedGroup) {
                         this.shooterSpeedGroup.style.display = 'block';
+                        const speedGroup = document.getElementById('chips-speed');
+                        if (speedGroup) {
+                            speedGroup.classList.add('active');
+                        }
                     }
                     if (this.rangeGroup) {
-                        this.rangeGroup.style.display = 'flex';
+                        this.rangeGroup.style.display = 'block';
                     }
                 } else {
                     if (this.shooterSpeedGroup) {
                         this.shooterSpeedGroup.style.display = 'none';
                     }
                     if (this.rangeGroup) {
-                        this.rangeGroup.style.display = 'flex';
+                        this.rangeGroup.style.display = 'block';
                     }
                 }
 
@@ -332,7 +336,7 @@ export class UIManager {
                 this.a11yState.noAnimations = !this.a11yState.noAnimations;
                 break;
             case 'remove-styles':
-                this.a11yState.removeStyles = !this.a11yState.removeStyles;
+                this.a11yState.removeStyles = false;
                 break;
             case 'cursor-large':
                 if (!this.isTouchDevice) {
@@ -388,7 +392,7 @@ export class UIManager {
         body.classList.toggle('a11y-greyscale-images', this.a11yState.greyscaleImages);
         body.classList.toggle('a11y-invert', this.a11yState.invert);
         body.classList.toggle('a11y-no-animations', this.a11yState.noAnimations);
-        body.classList.toggle('a11y-remove-styles', this.a11yState.removeStyles);
+        body.classList.remove('a11y-remove-styles');
         body.classList.toggle('a11y-cursor-large', !this.isTouchDevice && this.a11yState.cursorLarge);
         body.classList.toggle('a11y-monochrome', this.a11yState.monochrome);
         body.classList.toggle('a11y-sepia', this.a11yState.sepia);
@@ -1077,12 +1081,23 @@ export class UIManager {
         if (defaultSpeed) {
             defaultSpeed.classList.add('active');
         }
-        document.querySelectorAll('.chips-group').forEach((group) => {
-            group.classList.remove('active');
-        });
         const roundsGroup = document.getElementById('chips-rondas');
+        const timeGroup = document.getElementById('chips-tiempo');
+        const speedGroup = document.getElementById('chips-speed');
         if (roundsGroup) {
             roundsGroup.classList.add('active');
+        }
+        if (roundsGroup) {
+            roundsGroup.style.display = 'flex';
+        }
+        if (timeGroup) {
+            timeGroup.classList.remove('active');
+        }
+        if (speedGroup) {
+            speedGroup.classList.remove('active');
+        }
+        if (this.config.gameMode === 'disparar' && speedGroup) {
+            speedGroup.classList.add('active');
         }
         this.checkStartButton();
     }
