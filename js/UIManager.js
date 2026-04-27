@@ -115,7 +115,12 @@ export class UIManager {
         // Boton Jugar en Splash
         if (this.btnPlay) {
             this.btnPlay.addEventListener('click', () => {
-                this.navigate(this.screenSplash, this.screenMain);
+                this.screenSplash.classList.remove('active');
+                this.screenMain.classList.add('active');
+                // Ocultar la pantalla splash por completo para evitar superposicion
+                setTimeout(() => {
+                    this.screenSplash.style.display = 'none';
+                }, 500);
             });
         }
 
@@ -1000,6 +1005,7 @@ export class UIManager {
     checkStartButton() {
         if (this.btnStart) {
             this.btnStart.disabled = !this.config.isComplete();
+            this.btnStart.classList.toggle('enabled', this.config.isComplete());
         }
     }
 
