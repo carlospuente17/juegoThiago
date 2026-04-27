@@ -91,6 +91,24 @@ export class UIManager {
         this.syncStarsUI();
         this.loadA11yPreferences();
         this.applyA11yState();
+        this.createSplashParticles();
+    }
+
+    createSplashParticles() {
+        const container = document.getElementById('splash-particles');
+        if (!container) return;
+        const particleCount = 25;
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 40 + 10;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 10}s`;
+            particle.style.animationDuration = `${Math.random() * 10 + 8}s`;
+            container.appendChild(particle);
+        }
     }
 
     initEventListeners() {
