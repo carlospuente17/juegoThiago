@@ -78,16 +78,8 @@ export class UIManager {
         this.a11yButtons = Array.from(document.querySelectorAll('.a11y-btn'));
 
         this.a11yState = {
-            font: 'base',
             contrast: false,
-            highlightLinks: false,
-            greyscaleImages: false,
-            invert: false,
             noAnimations: false,
-            removeStyles: false,
-            cursorLarge: false,
-            monochrome: false,
-            sepia: false
         };
 
         this.initEventListeners();
@@ -326,34 +318,8 @@ export class UIManager {
             case 'contrast':
                 this.a11yState.contrast = !this.a11yState.contrast;
                 break;
-            case 'greyscale-images':
-                this.a11yState.greyscaleImages = !this.a11yState.greyscaleImages;
-                break;
-            case 'invert':
-                this.a11yState.invert = !this.a11yState.invert;
-                break;
             case 'no-animations':
                 this.a11yState.noAnimations = !this.a11yState.noAnimations;
-                break;
-            case 'remove-styles':
-                this.a11yState.removeStyles = false;
-                break;
-            case 'cursor-large':
-                if (!this.isTouchDevice) {
-                    this.a11yState.cursorLarge = !this.a11yState.cursorLarge;
-                }
-                break;
-            case 'monochrome':
-                this.a11yState.monochrome = !this.a11yState.monochrome;
-                if (this.a11yState.monochrome) {
-                    this.a11yState.sepia = false;
-                }
-                break;
-            case 'sepia':
-                this.a11yState.sepia = !this.a11yState.sepia;
-                if (this.a11yState.sepia) {
-                    this.a11yState.monochrome = false;
-                }
                 break;
             case 'reset':
                 this.resetA11yState();
@@ -368,16 +334,8 @@ export class UIManager {
 
     resetA11yState() {
         this.a11yState = {
-            font: 'base',
             contrast: false,
-            highlightLinks: false,
-            greyscaleImages: false,
-            invert: false,
             noAnimations: false,
-            removeStyles: false,
-            cursorLarge: false,
-            monochrome: false,
-            sepia: false
         };
     }
 
@@ -385,17 +343,8 @@ export class UIManager {
         const html = document.documentElement;
         const body = document.body;
 
-        html.classList.remove('a11y-font-sm', 'a11y-font-lg');
-
         body.classList.toggle('a11y-contrast', this.a11yState.contrast);
-        body.classList.remove('a11y-highlight-links');
-        body.classList.toggle('a11y-greyscale-images', this.a11yState.greyscaleImages);
-        body.classList.toggle('a11y-invert', this.a11yState.invert);
         body.classList.toggle('a11y-no-animations', this.a11yState.noAnimations);
-        body.classList.remove('a11y-remove-styles');
-        body.classList.toggle('a11y-cursor-large', !this.isTouchDevice && this.a11yState.cursorLarge);
-        body.classList.toggle('a11y-monochrome', this.a11yState.monochrome);
-        body.classList.toggle('a11y-sepia', this.a11yState.sepia);
 
         this.refreshA11yButtonState();
     }
@@ -407,20 +356,8 @@ export class UIManager {
 
             if (action === 'contrast') {
                 isActive = this.a11yState.contrast;
-            } else if (action === 'greyscale-images') {
-                isActive = this.a11yState.greyscaleImages;
-            } else if (action === 'invert') {
-                isActive = this.a11yState.invert;
             } else if (action === 'no-animations') {
                 isActive = this.a11yState.noAnimations;
-            } else if (action === 'remove-styles') {
-                isActive = this.a11yState.removeStyles;
-            } else if (action === 'cursor-large') {
-                isActive = !this.isTouchDevice && this.a11yState.cursorLarge;
-            } else if (action === 'monochrome') {
-                isActive = this.a11yState.monochrome;
-            } else if (action === 'sepia') {
-                isActive = this.a11yState.sepia;
             }
 
             button.classList.toggle('active', isActive);
@@ -440,8 +377,8 @@ export class UIManager {
         try {
             const parsed = JSON.parse(rawState);
             this.a11yState = {
-                ...this.a11yState,
-                ...parsed
+                contrast: Boolean(parsed.contrast),
+                noAnimations: Boolean(parsed.noAnimations)
             };
         } catch (error) {
             this.resetA11yState();
