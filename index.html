@@ -17,13 +17,28 @@
 <div id="app">
     <!-- PANTALLA 1: MENÚ PRINCIPAL -->
     <div id="screen-main" class="screen active">
-        <div class="header">
-            <div>
-                <h1 class="header-title" style="animation: bounce 2s infinite;">¡Hola, Thiago!</h1>
-                <p class="header-subtitle">¿Qué quieres aprender hoy?</p>
+        <div class="main-deco main-deco-left" aria-hidden="true">
+            <span class="material-symbols-rounded">rocket_launch</span>
+        </div>
+        <div class="main-deco main-deco-right" aria-hidden="true">
+            <span class="material-symbols-rounded">smart_toy</span>
+        </div>
+
+        <div class="main-hero">
+            <div class="header">
+                <div>
+                    <h1 class="header-title hero-title">Hola, Thiago</h1>
+                    <p class="header-subtitle hero-subtitle">Escoge una aventura para aprender jugando</p>
+                </div>
+                <div class="stars-counter hero-stars">
+                    <span class="material-symbols-rounded" style="color: #FFD700; font-size: 24px; font-variation-settings: 'FILL' 1;">star</span> <span id="stars-total">0</span>
+                </div>
             </div>
-            <div class="stars-counter">
-                <span class="material-symbols-rounded" style="color: #FFD700; font-size: 24px; font-variation-settings: 'FILL' 1;">star</span> <span id="stars-total">0</span>
+
+            <div class="hero-clouds" aria-hidden="true">
+                <span class="material-symbols-rounded">cloud</span>
+                <span class="material-symbols-rounded">cloud</span>
+                <span class="material-symbols-rounded">cloud</span>
             </div>
         </div>
 
@@ -224,6 +239,33 @@
         <button id="btn-start" class="btn-start">
             ¡EMPEZAR! <span class="material-symbols-rounded">rocket_launch</span>
         </button>
+    </div>
+
+    <button id="a11y-toggle" class="a11y-toggle" aria-label="Abrir accesibilidad">
+        <span class="material-symbols-rounded">accessibility_new</span>
+    </button>
+
+    <div id="a11y-panel" class="a11y-panel" aria-hidden="true">
+        <div class="a11y-header">
+            <h3>VEKRAK</h3>
+            <button id="a11y-close" class="a11y-close" aria-label="Cerrar accesibilidad">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+        <div class="a11y-grid">
+            <button class="a11y-btn" data-a11y-action="font-decrease">A-</button>
+            <button class="a11y-btn" data-a11y-action="font-increase">A+</button>
+            <button class="a11y-btn" data-a11y-action="contrast">CONTRASTE</button>
+            <button class="a11y-btn" data-a11y-action="highlight-links">ILUMINAR ENLACES</button>
+            <button class="a11y-btn" data-a11y-action="reset">RESTABLECER</button>
+            <button class="a11y-btn" data-a11y-action="greyscale-images">IMAGES GREYSCALE</button>
+            <button class="a11y-btn" data-a11y-action="invert">INVERTIR</button>
+            <button class="a11y-btn" data-a11y-action="no-animations">SIN ANIMACIONES</button>
+            <button class="a11y-btn" data-a11y-action="remove-styles">REMOVER ESTILOS</button>
+            <button id="a11y-cursor-btn" class="a11y-btn" data-a11y-action="cursor-large">CURSOR AMPLIADO</button>
+            <button class="a11y-btn" data-a11y-action="monochrome">MONOCROMÁTICO</button>
+            <button class="a11y-btn" data-a11y-action="sepia">SEPIA</button>
+        </div>
     </div>
 </div>
 

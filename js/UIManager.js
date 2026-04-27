@@ -4,6 +4,8 @@ export class UIManager {
 
         this.storageKey = 'mundoThiagoStars';
         this.totalStars = Number(localStorage.getItem(this.storageKey) || 0);
+        this.a11yStorageKey = 'mundoThiagoA11y';
+        this.isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
         this.timerIntervalId = null;
         this.animationFrameId = null;
@@ -51,8 +53,30 @@ export class UIManager {
         this.btnBackMain = document.getElementById('btn-back-main');
         this.confettiLayer = document.getElementById('confetti-layer');
 
+        // Accesibilidad
+        this.a11yToggle = document.getElementById('a11y-toggle');
+        this.a11yPanel = document.getElementById('a11y-panel');
+        this.a11yClose = document.getElementById('a11y-close');
+        this.a11yButtons = Array.from(document.querySelectorAll('.a11y-btn'));
+        this.cursorBtn = document.getElementById('a11y-cursor-btn');
+
+        this.a11yState = {
+            font: 'base',
+            contrast: false,
+            highlightLinks: false,
+            greyscaleImages: false,
+            invert: false,
+            noAnimations: false,
+            removeStyles: false,
+            cursorLarge: false,
+            monochrome: false,
+            sepia: false
+        };
+
         this.initEventListeners();
         this.syncStarsUI();
+        this.loadA11yPreferences();
+        this.applyA11yState();
     }
 
     initEventListeners() {
@@ -174,7 +198,186 @@ export class UIManager {
             });
         }
 
+        this.bindA11yControls();
         this.bindAimingControls();
+    }
+
+    bindA11yControls() {
+        if (this.a11yToggle && this.a11yPanel) {
+            this.a11yToggle.addEventListener('click', () => {
+                const isActive = this.a11yPanel.classList.toggle('active');
+                this.a11yPanel.setAttribute('aria-hidden', String(!isActive));
+            });
+        }
+
+        if (this.a11yClose && this.a11yPanel) {
+            this.a11yClose.addEventListener('click', () => {
+                this.a11yPanel.classList.remove('active');
+                this.a11yPanel.setAttribute('aria-hidden', 'true');
+            });
+        }
+
+        if (this.cursorBtn && this.isTouchDevice) {
+            this.cursorBtn.classList.add('disabled');
+            this.cursorBtn.disabled = true;
+        }
+
+        this.a11yButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (button.disabled) {
+                    return;
+                }
+                this.handleA11yAction(button.dataset.a11yAction);
+            });
+        });
+    }
+
+    handleA11yAction(action) {
+        switch (action) {
+            case 'font-decrease':
+                this.a11yState.font = 'sm';
+                break;
+            case 'font-increase':
+                this.a11yState.font = 'lg';
+                break;
+            case 'contrast':
+                this.a11yState.contrast = !this.a11yState.contrast;
+                break;
+            case 'highlight-links':
+                this.a11yState.highlightLinks = !this.a11yState.highlightLinks;
+                break;
+            case 'greyscale-images':
+                this.a11yState.greyscaleImages = !this.a11yState.greyscaleImages;
+                break;
+            case 'invert':
+                this.a11yState.invert = !this.a11yState.invert;
+                break;
+            case 'no-animations':
+                this.a11yState.noAnimations = !this.a11yState.noAnimations;
+                break;
+            case 'remove-styles':
+                this.a11yState.removeStyles = !this.a11yState.removeStyles;
+                break;
+            case 'cursor-large':
+                if (!this.isTouchDevice) {
+                    this.a11yState.cursorLarge = !this.a11yState.cursorLarge;
+                }
+                break;
+            case 'monochrome':
+                this.a11yState.monochrome = !this.a11yState.monochrome;
+                if (this.a11yState.monochrome) {
+                    this.a11yState.sepia = false;
+                }
+                break;
+            case 'sepia':
+                this.a11yState.sepia = !this.a11yState.sepia;
+                if (this.a11yState.sepia) {
+                    this.a11yState.monochrome = false;
+                }
+                break;
+            case 'reset':
+                this.resetA11yState();
+                break;
+            default:
+                break;
+        }
+
+        this.applyA11yState();
+        this.saveA11yPreferences();
+    }
+
+    resetA11yState() {
+        this.a11yState = {
+            font: 'base',
+            contrast: false,
+            highlightLinks: false,
+            greyscaleImages: false,
+            invert: false,
+            noAnimations: false,
+            removeStyles: false,
+            cursorLarge: false,
+            monochrome: false,
+            sepia: false
+        };
+    }
+
+    applyA11yState() {
+        const html = document.documentElement;
+        const body = document.body;
+
+        html.classList.remove('a11y-font-sm', 'a11y-font-lg');
+        if (this.a11yState.font === 'sm') {
+            html.classList.add('a11y-font-sm');
+        }
+        if (this.a11yState.font === 'lg') {
+            html.classList.add('a11y-font-lg');
+        }
+
+        body.classList.toggle('a11y-contrast', this.a11yState.contrast);
+        body.classList.toggle('a11y-highlight-links', this.a11yState.highlightLinks);
+        body.classList.toggle('a11y-greyscale-images', this.a11yState.greyscaleImages);
+        body.classList.toggle('a11y-invert', this.a11yState.invert);
+        body.classList.toggle('a11y-no-animations', this.a11yState.noAnimations);
+        body.classList.toggle('a11y-remove-styles', this.a11yState.removeStyles);
+        body.classList.toggle('a11y-cursor-large', !this.isTouchDevice && this.a11yState.cursorLarge);
+        body.classList.toggle('a11y-monochrome', this.a11yState.monochrome);
+        body.classList.toggle('a11y-sepia', this.a11yState.sepia);
+
+        this.refreshA11yButtonState();
+    }
+
+    refreshA11yButtonState() {
+        this.a11yButtons.forEach((button) => {
+            const action = button.dataset.a11yAction;
+            let isActive = false;
+
+            if (action === 'font-decrease') {
+                isActive = this.a11yState.font === 'sm';
+            } else if (action === 'font-increase') {
+                isActive = this.a11yState.font === 'lg';
+            } else if (action === 'contrast') {
+                isActive = this.a11yState.contrast;
+            } else if (action === 'highlight-links') {
+                isActive = this.a11yState.highlightLinks;
+            } else if (action === 'greyscale-images') {
+                isActive = this.a11yState.greyscaleImages;
+            } else if (action === 'invert') {
+                isActive = this.a11yState.invert;
+            } else if (action === 'no-animations') {
+                isActive = this.a11yState.noAnimations;
+            } else if (action === 'remove-styles') {
+                isActive = this.a11yState.removeStyles;
+            } else if (action === 'cursor-large') {
+                isActive = !this.isTouchDevice && this.a11yState.cursorLarge;
+            } else if (action === 'monochrome') {
+                isActive = this.a11yState.monochrome;
+            } else if (action === 'sepia') {
+                isActive = this.a11yState.sepia;
+            }
+
+            button.classList.toggle('active', isActive);
+        });
+    }
+
+    saveA11yPreferences() {
+        localStorage.setItem(this.a11yStorageKey, JSON.stringify(this.a11yState));
+    }
+
+    loadA11yPreferences() {
+        const rawState = localStorage.getItem(this.a11yStorageKey);
+        if (!rawState) {
+            return;
+        }
+
+        try {
+            const parsed = JSON.parse(rawState);
+            this.a11yState = {
+                ...this.a11yState,
+                ...parsed
+            };
+        } catch (error) {
+            this.resetA11yState();
+        }
     }
 
     bindAimingControls() {
