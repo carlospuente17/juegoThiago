@@ -76,6 +76,62 @@ body {
     opacity: 0.8;
 }
 
+/* --- PANTALLA SPLASH --- */
+#screen-splash {
+    background: linear-gradient(160deg, #6EC3F4, #A9D9F7);
+    justify-content: center;
+    align-items: center;
+    z-index: 10; /* Asegura que esté por encima de todo al inicio */
+}
+
+.splash-content {
+    text-align: center;
+    animation: fadeIn 1s ease-out;
+}
+
+.splash-logo {
+    max-width: 80%;
+    height: auto;
+    margin-bottom: 40px;
+}
+
+.btn-play-animated {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    font-size: 22px;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.btn-play-animated:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.25);
+    animation-play-state: paused;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* --- ENCABEZADOS --- */
 .header {
     display: flex;

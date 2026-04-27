@@ -18,6 +18,7 @@ export class UIManager {
         this.session = null;
 
         // Pantallas
+        this.screenSplash = document.getElementById('screen-splash');
         this.screenMain = document.getElementById('screen-main');
         this.screenMath = document.getElementById('screen-math');
         this.screenGame = document.getElementById('screen-game');
@@ -31,6 +32,7 @@ export class UIManager {
         this.rangeGroup = document.getElementById('range-group');
 
         // Botones principales
+        this.btnPlay = document.getElementById('btn-play');
         this.btnStart = document.getElementById('btn-start');
         this.btnExitGame = document.getElementById('btn-exit-game');
         this.btnReplay = document.getElementById('btn-replay');
@@ -92,6 +94,13 @@ export class UIManager {
     }
 
     initEventListeners() {
+        // Boton Jugar en Splash
+        if (this.btnPlay) {
+            this.btnPlay.addEventListener('click', () => {
+                this.navigate(this.screenSplash, this.screenMain);
+            });
+        }
+
         // Navegacion a Matematica
         const mathBtn = document.querySelector('.subject-card[data-subject="matematica"]');
         if (mathBtn) {
